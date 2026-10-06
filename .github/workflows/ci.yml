@@ -1,0 +1,39 @@
+name: CI - Code Checks
+
+# Ye workflow har push aur pull request pe khud-ba-khud chalega
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-code:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository checkout karo
+        uses: actions/checkout@v4
+
+      - name: Python setup karo
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Dependencies install karo
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8
+
+      - name: Syntax aur basic errors check karo (flake8)
+        run: |
+          # E9,F63,F7,F82 = syntax errors aur undefined names (sabse zaroori checks)
+          # .venv aur cache folders exclude kar rahe hain - wo library code hai, hamara nahi
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.venv,venv,__pycache__,.git
+
+      - name: Python files import ho rahi hain ya nahi check karo
+        run: |
+          python -c "import ast; ast.parse(open('app.py').read())"
+          python -c "import ast; ast.parse(open('copywriter_gemini.py').read())"
+          echo "Dono files mein syntax sahi hai ✅"
